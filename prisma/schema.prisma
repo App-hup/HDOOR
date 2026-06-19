@@ -1,0 +1,112 @@
+// School Attendance Management System Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id         String   @id @default(cuid())
+  code       String   @unique // MTHN-XXXXX
+  name       String
+  pin        String
+  levelsJson String   @default("[{\"level\":1,\"name\":\"آمن\",\"minDays\":1,\"maxDays\":5,\"color\":\"green\"},{\"level\":2,\"name\":\"تنبيه\",\"minDays\":6,\"maxDays\":10,\"color\":\"yellow\"},{\"level\":3,\"name\":\"تحذير\",\"minDays\":11,\"maxDays\":15,\"color\":\"orange\"},{\"level\":4,\"name\":\"خطر\",\"minDays\":16,\"maxDays\":999,\"color\":\"red\"}]")
+  createdAt  DateTime @default(now())
+
+  teachers      Teacher[]
+  students      Student[]
+  lateRecords   LateRecord[]
+  absenceRecords AbsenceRecord[]
+  notes         Note[]
+  permissions   Permission[]
+  excuses       Excuse[]
+}
+
+model Teacher {
+  id        String   @id @default(cuid())
+  code      String   @unique // MTHN-XXXXX-XX
+  name      String
+  pin       String
+  role      String   @default("TEACHER") // PRINCIPAL | TEACHER
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  name      String
+  civilId   String   @default("")
+  phone     String   @default("")
+  grade     String
+  section   String
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  lateRecords     LateRecord[]
+  absenceRecords  AbsenceRecord[]
+  notes           Note[]
+  permissions     Permission[]
+  createdAt DateTime @default(now())
+}
+
+model LateRecord {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD
+  createdAt DateTime @default(now())
+}
+
+model AbsenceRecord {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD
+  createdAt DateTime @default(now())
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Permission {
+  id           String @id @default(cuid())
+  studentId    String
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  date         String   // YYYY-MM-DD
+  time         String   // HH:MM
+  reason       String
+  guardianName String   @default("")
+  createdAt    DateTime @default(now())
+}
+
+model Excuse {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentName String
+  grade       String   @default("")
+  absenceDate String   // YYYY-MM-DD
+  daysCount   Int      @default(1)
+  reason      String
+  attachment  String?
+  status      String   @default("PENDING") // PENDING | REVIEWED
+  createdAt   DateTime @default(now())
+}
